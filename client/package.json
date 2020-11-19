@@ -2,9 +2,9 @@
     "name": "web-audio-injector-client",
     "version": "0.1.0",
     "description": "Web client to accept playback stream from web-audio-injector server",
-    "main": "./src/app.js",
+    "main": ".app.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "start": "node ./app.js"
     },
     "repository": {
         "type": "git",
@@ -16,7 +16,9 @@
         "url": "https://github.com/agentile1990/web-audio-injector/issues"
     },
     "homepage": "https://github.com/agentile1990/web-audio-injector#readme",
-    "dependencies": {},
+    "dependencies": {
+        "dotenv": "^8.2.0"
+    },
     "devDependencies": {
         "eslint": "^7.13.0",
         "eslint-config-prettier": "^6.15.0",
