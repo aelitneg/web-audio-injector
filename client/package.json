@@ -1,0 +1,25 @@
+{
+    "name": "web-audio-injector-client",
+    "version": "0.1.0",
+    "description": "Web client to accept playback stream from web-audio-injector server",
+    "main": "./src/app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/agentile1990/web-audio-injector.git"
+    },
+    "author": "Andrew Gentile <agentile1990@gmail.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/agentile1990/web-audio-injector/issues"
+    },
+    "homepage": "https://github.com/agentile1990/web-audio-injector#readme",
+    "dependencies": {},
+    "devDependencies": {
+        "eslint": "^7.13.0",
+        "eslint-config-prettier": "^6.15.0",
+        "prettier": "^2.1.2"
+    }
+}
