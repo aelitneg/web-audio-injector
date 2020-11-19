@@ -1,0 +1,15 @@
+{
+    "name": "Existing Dockerfile",
+    "context": "..",
+    "dockerFile": "../Dockerfile",
+    "settings": {
+        "python.pythonPath": "/usr/local/bin/python",
+        "terminal.integrated.shell.linux": null,
+        "editor.formatOnSave": true
+    },
+    "extensions": [
+        "ms-python.python"
+    ],
+    "postCreateCommand": "pip install pylint autopep8"
+    // "forwardPorts": [],
+}
