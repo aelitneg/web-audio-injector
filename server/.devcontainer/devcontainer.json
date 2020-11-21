@@ -10,6 +10,8 @@
     "extensions": [
         "ms-python.python"
     ],
-    "postCreateCommand": "pip install pylint autopep8"
-    // "forwardPorts": [],
+    "postStartCommand": "pip install pylint autopep8",
+    "forwardPorts": [
+        3000
+    ],
 }
