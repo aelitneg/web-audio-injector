@@ -30,6 +30,7 @@ class WebAudioInjector:
 
         if (msg_type == "connect"):
             self.connect(websocket)
+            await self.send_status(websocket)
         elif (msg_type == "status"):
             await self.send_status(websocket)
 
@@ -52,8 +53,11 @@ class WebAudioInjector:
         print("[web-audio-injector] sending status")
 
         msg = json.dumps({
-            "is_audio_loaded": self.is_audio_loaded,
-            "is_client_connected": self.is_client_connected
+            "type": "status",
+            "payload": {
+                "is_audio_loaded": self.is_audio_loaded,
+                "is_client_connected": self.is_client_connected
+            }
         })
 
         await websocket.send(msg)
