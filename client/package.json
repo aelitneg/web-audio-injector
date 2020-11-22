@@ -4,7 +4,8 @@
     "description": "Web client to accept playback stream from web-audio-injector server",
     "main": ".app.js",
     "scripts": {
-        "start": "node ./app.js"
+        "start": "node ./app.js",
+        "dev": "nodemon ./app.js"
     },
     "repository": {
         "type": "git",
@@ -22,6 +23,7 @@
     "devDependencies": {
         "eslint": "^7.13.0",
         "eslint-config-prettier": "^6.15.0",
+        "nodemon": "^2.0.6",
         "prettier": "^2.1.2"
     }
 }
