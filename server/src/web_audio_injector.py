@@ -8,13 +8,24 @@ playback is started.
 """
 
 import json
+import wave
 
 
 class WebAudioInjector:
-    def __init__(self):
+    def __init__(self, audio_file):
         self.is_audio_loaded = False
         self.is_client_connected = False
         self.ws_client = None
+
+        self.load_audio_file(audio_file)
+
+    def load_audio_file(self, audio_file):
+        print("[web-audio-injector] loading audio file:", audio_file)
+
+        self.audio_file = wave.open(audio_file, mode='rb')
+        print("[web-audio-injector]", self.audio_file.getparams())
+
+        self.audioFile_loaded = True
 
     async def handle_message(self, websocket, path):
         """
