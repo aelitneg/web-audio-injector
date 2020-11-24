@@ -1,6 +1,6 @@
 FROM python:3.9
 
-RUN pip install websockets
+RUN pip install wave websockets
 
 WORKDIR /app
 

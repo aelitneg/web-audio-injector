@@ -11,6 +11,7 @@ instance of the WebAudioInjector class, starts a SocketServer
 listening on the specified PORT. The server calls the injector
 callback for each message. 
 """
+import sys
 
 import socket_server
 import web_audio_injector
@@ -20,6 +21,10 @@ PORT = 3000
 if __name__ == "__main__":
     print("[web-audio-injector] initializing")
 
-    injector = web_audio_injector.WebAudioInjector()
+    if len(sys.argv) != 2:
+        print("Usage: python ./app.py audioFile.wav")
+        exit()
 
-    server = socket_server.SocketServer(injector.handle_message, PORT)
+    injector = web_audio_injector.WebAudioInjector(sys.argv[1])
+
+server = socket_server.SocketServer(injector.handle_message, PORT)
