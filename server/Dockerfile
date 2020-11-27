@@ -6,4 +6,6 @@ WORKDIR /app
 
 COPY ./src .
 
+ENV PYTHONASYNCIODEBUG=1
+
 CMD ["python", "./app.py"]
