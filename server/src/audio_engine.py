@@ -36,10 +36,30 @@ class AudioEngine:
                 logger.warn("Unsupported command: %s", command)
 
     def play_audio(self):
-        logger.info("playing audio")
+        logger.info("play audio started")
+
+        self.audio_file.rewind()
+
         while self.audio_file.tell() < self.audio_file.getnframes():
             self.audio_queue.put(
-                {"type": "data", "data": self.audio_file.readframes(FRAME_BUFFER)})
+                {"type": "data", "payload": self.audio_file.readframes(FRAME_BUFFER)})
+
+        logger.info("play audio complete")
+
+    def send_status(self):
+        message = {
+            "type": "status",
+            "payload": {
+                "channels": self.audio_file.getnchannels(),
+                "sample_rate": self.audio_file.getframerate(),
+                "bit_depth": self.audio_file.getsampwidth(),
+                "frame_count": self.audio_file.getnframes(),
+                "buffer_length": FRAME_BUFFER,
+            }
+        }
+
+        logger.info("sending status")
+        self.data_queue.put(message)
 
     def queue_processor(self):
         logger.info("listening for messages in queue")
@@ -49,6 +69,10 @@ class AudioEngine:
             message = self.queue.get(block=True)
             logger.debug(message)
 
-            error_message = "Unhandled message type: " + message["type"]
-            logger.warn(error_message)
-            self.data_queue.put({"type": "error", "message": error_message})
+            if (message["type"] == 'status'):
+                self.send_status()
+            else:
+                error_message = "Unhandled message type: " + message["type"]
+                logger.warn(error_message)
+                self.data_queue.put(
+                    {"type": "error", "payload": error_message})

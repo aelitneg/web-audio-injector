@@ -37,6 +37,8 @@ class WebSocketServer:
         async for raw_message in self.websocket:
             self.out_queue.put(json.loads(raw_message))
 
+        logger.info("client disconnected")
+
     async def send_message(self, message):
         await self.websocket.send(json.dumps(message))
 
@@ -50,6 +52,6 @@ class WebSocketServer:
         while self.processing_queue:
             message = self.queue.get(block=True)
             if (message["type"] == "data"):
-                asyncio.run(self.send_data(message["data"]))
+                asyncio.run(self.send_data(message["payload"]))
             else:
                 asyncio.run(self.send_message(message))
