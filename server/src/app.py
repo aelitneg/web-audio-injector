@@ -1,30 +1,46 @@
-"""
-Web Audio Injector - Server
-
-The Web Audio Injector Server performs two main functions: 
-- Loads an audio file into memory
-- Stream the audio file to the client over the Web Socket 
-connection
-
-This is the main entry point for the application. It creates an 
-instance of the WebAudioInjector class, starts a SocketServer 
-listening on the specified PORT. The server calls the injector
-callback for each message. 
-"""
+import asyncio
+from queue import Queue
 import sys
 
-import socket_server
-import web_audio_injector
+from audio_engine import AudioEngine
+from web_socket_server import WebSocketServer
 
-PORT = 3000
+from logger import create_logger
+logger = create_logger("main")
+
+AUDIO_PORT = 3001
+DATA_PORT = 3000
+
+
+async def main():
+    logger.info("starting application")
+
+    if len(sys.argv) < 2:
+        logger.error("No audio file argument provided.")
+        exit(1)
+
+    audio_engine = AudioEngine(sys.argv[1])
+
+    audio_socket = WebSocketServer(AUDIO_PORT)
+    data_socket = WebSocketServer(DATA_PORT)
+
+    data_socket.set_out_queue(audio_engine.queue)
+
+    audio_engine.set_audio_queue(audio_socket.queue)
+    audio_engine.set_data_queue(data_socket.queue)
+
+    await asyncio.gather(
+        asyncio.to_thread(audio_engine.queue_processor),
+
+        asyncio.to_thread(audio_socket.queue_processor),
+        asyncio.to_thread(data_socket.queue_processor),
+
+        asyncio.to_thread(audio_socket.serve),
+        asyncio.to_thread(data_socket.serve),
+
+        asyncio.to_thread(audio_engine.run),
+    )
+
 
 if __name__ == "__main__":
-    print("[web-audio-injector] initializing")
-
-    if len(sys.argv) != 2:
-        print("Usage: python ./app.py audioFile.wav")
-        exit()
-
-    injector = web_audio_injector.WebAudioInjector(sys.argv[1])
-
-server = socket_server.SocketServer(injector.handle_message, PORT)
+    asyncio.run(main())
