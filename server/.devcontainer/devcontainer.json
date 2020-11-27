@@ -12,6 +12,7 @@
     ],
     "postStartCommand": "pip install pylint autopep8",
     "forwardPorts": [
-        3000
+        3000,
+        3001
     ],
 }
