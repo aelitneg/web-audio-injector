@@ -1,5 +1,7 @@
 'use strict';
 
+import InjectorNode from './injectorNode.js';
+
 console.log('[web-audio-injector] initializing');
 
 /**
@@ -17,12 +19,32 @@ const state = {
             bufferLength: 0,
         },
     },
+    audioContext: 'INIT',
 };
 
 /**
- * Worker thread
+ * Create Worker thread for WebSocket connection to server
  */
 const worker = new Worker('/worker.js');
+
+/**
+ * Create WebAudioAPI Context
+ */
+const audioContext = new AudioContext();
+let injectorNode;
+
+/**
+ * Register AudioWorkletProcessor with AudioContext
+ */
+audioContext.audioWorklet
+    .addModule('./injectorProcessor.js')
+    .then(function () {
+        console.log('[web-audio-injector]', audioContext);
+        injectorNode = new InjectorNode(audioContext);
+    })
+    .catch(function (error) {
+        console.error('[web-audio-injector]', error);
+    });
 
 /**
  * Handle message from worker thread.
