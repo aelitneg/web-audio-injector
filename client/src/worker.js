@@ -17,7 +17,7 @@ dataSocket.onmessage = handleMessage;
 audioSocket.onmessage = handleAudio;
 
 dataSocket.onopen = function () {
-    console.log('[web-audio-injector:worler] dataSocket opened');
+    console.log('[web-audio-injector:worker] dataSocket opened');
     sendMessage({ type: 'status' });
     updateStatus();
 };
@@ -28,7 +28,7 @@ dataSocket.onclose = function () {
 };
 
 audioSocket.onopen = function () {
-    console.log('[web-audio-injector:worler] audioSocket opened');
+    console.log('[web-audio-injector:worker] audioSocket opened');
     updateStatus();
 };
 
