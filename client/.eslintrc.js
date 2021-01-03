@@ -1,15 +1,12 @@
 module.exports = {
     env: {
         commonjs: true,
-        es2021: false,
+        es2017: true,
         browser: true,
         jquery: true,
-        es6: true,
     },
     extends: ['eslint:recommended', 'prettier'],
     parserOptions: {
-        ecmaVersion: 12,
         sourceType: 'module',
     },
-    rules: {},
 };
