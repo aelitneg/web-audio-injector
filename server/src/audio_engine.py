@@ -4,7 +4,7 @@ import wave
 from logger import create_logger
 logger = create_logger("AudioEngine")
 
-FRAME_BUFFER = 128
+FRAME_BUFFER = 1024
 
 
 class AudioEngine:

@@ -21,6 +21,7 @@ class InjectorWorker {
         this.audioSocket.onclose = this.audioSocketClose.bind(this);
 
         this.frames = 0;
+        this.xferStart;
     }
 
     handleMessage(event) {
@@ -36,8 +37,8 @@ class InjectorWorker {
     }
 
     handleAudio() {
-        //console.log('[web-audio-injector:worker] handleAudio', 'frames', this.frames);
         if (this.frames == 0) {
+            this.xferStart = performance.now();
             console.log('[web-audio-injector:worker] receiving audio...');
         }
 
@@ -47,9 +48,9 @@ class InjectorWorker {
             this.frames >=
             Math.ceil(this.audioFile.frameCount / this.audioFile.bufferLength)
         ) {
+            const diff = performance.now() - this.xferStart;
             console.log(
-                '[web-audio-injector] finished receiving audio!',
-                this.frames,
+                `[web-audio-injector:worker] received ${this.frames} frames in ${diff} ms`,
             );
             this.frames = 0;
         }
