@@ -5,13 +5,13 @@ class InjectorProcessor extends AudioWorkletProcessor {
         super();
 
         this.port.onmessage = (e) => {
-            console.log('[injector-processor]', e);
+            console.log('[web-audio-injector:processor]', e);
         };
 
         this.port.postMessage({ type: 'ping' });
     }
 
-    process(inputs, outputs) {
+    process() {
         return true;
     }
 }

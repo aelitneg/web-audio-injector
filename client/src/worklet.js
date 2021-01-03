@@ -5,7 +5,7 @@ class WebAudioInjectorNode extends AudioWorkletNode {
         super(context, 'injector-processor');
 
         this.port.onmessage = (e) => {
-            console.log('[injector-node]', e);
+            console.log('[web-audio-injector:worklet]', e);
         };
 
         this.port.postMessage({ type: 'ping' });

@@ -1,104 +1,108 @@
 'use strict';
 
-console.log('[web-audio-injector:worker] initializing');
+class InjectorWorker {
+    constructor() {
+        this.audioFile = {
+            channels: 0,
+            sampleRate: 0,
+            bitDepth: 0,
+            frameCount: 0,
+            bufferLength: 0,
+        };
 
-const audioFile = {
-    channels: 0,
-    sampleRate: 0,
-    bitDepth: 0,
-    frameCount: 0,
-    bufferLength: 0,
-};
+        this.dataSocket = new WebSocket('ws://localhost:3000');
+        this.dataSocket.onmessage = this.handleMessage.bind(this);
+        this.dataSocket.onopen = this.dataSocketOpen.bind(this);
+        this.dataSocket.onclose = this.dataSocketClose.bind(this);
 
-const dataSocket = new WebSocket('ws://localhost:3000');
-const audioSocket = new WebSocket('ws://localhost:3001');
+        this.audioSocket = new WebSocket('ws://localhost:3001');
+        this.audioSocket.onmessage = this.handleAudio.bind(this);
+        this.audioSocket.onopen = this.audioSocketOpen.bind(this);
+        this.audioSocket.onclose = this.audioSocketClose.bind(this);
 
-dataSocket.onmessage = handleMessage;
-audioSocket.onmessage = handleAudio;
+        this.frames = 0;
+    }
 
-dataSocket.onopen = function () {
-    console.log('[web-audio-injector:worker] dataSocket opened');
-    sendMessage({ type: 'status' });
-    updateStatus();
-};
+    handleMessage(event) {
+        const { type, payload } = JSON.parse(event.data);
 
-dataSocket.onclose = function () {
-    console.log('[web-audio-injector:worker] dataSocket closed');
-    updateStatus();
-};
+        switch (type) {
+            case 'status':
+                this.parseStatus(payload);
+                break;
+            default:
+                postMessage(JSON.parse(event.data));
+        }
+    }
 
-audioSocket.onopen = function () {
-    console.log('[web-audio-injector:worker] audioSocket opened');
-    updateStatus();
-};
+    handleAudio() {
+        //console.log('[web-audio-injector:worker] handleAudio', 'frames', this.frames);
+        if (this.frames == 0) {
+            console.log('[web-audio-injector:worker] receiving audio...');
+        }
 
-audioSocket.onclose = function () {
-    console.log('[web-audio-injector:worker] audioSocket closed');
-    updateStatus();
-};
+        this.frames++;
 
-/**
- * Handle message from dataSocket.
- * @param {MessageEvent} event
- */
-function handleMessage(event) {
-    const { type, payload } = JSON.parse(event.data);
+        if (
+            this.frames >=
+            Math.ceil(this.audioFile.frameCount / this.audioFile.bufferLength)
+        ) {
+            console.log(
+                '[web-audio-injector] finished receiving audio!',
+                this.frames,
+            );
+            this.frames = 0;
+        }
+    }
 
-    switch (type) {
-        case 'status':
-            parseStatus(payload);
-            break;
-        default:
-            postMessage(JSON.parse(event.data));
+    dataSocketOpen() {
+        console.log('[web-audio-injector:worker] dataSocket opened');
+        this.sendMessage({ type: 'status' });
+        this.updateStatus();
+    }
+
+    dataSocketClose() {
+        console.log('[web-audio-injector:worker] dataSocket closed');
+        this.updateStatus();
+    }
+
+    audioSocketOpen() {
+        console.log('[web-audio-injector:worker] audioSocket opened');
+        this.updateStatus();
+    }
+
+    audioSocketClose() {
+        console.log('[web-audio-injector:worker] audioSocket closed');
+        this.updateStatus();
+    }
+
+    parseStatus(payload) {
+        const audioFile = this.audioFile;
+
+        audioFile.channels = payload.channels;
+        audioFile.sampleRate = payload.sample_rate;
+        audioFile.bitDepth = payload.bit_depth * 8;
+        audioFile.frameCount = payload.frame_count;
+        audioFile.bufferLength = payload.buffer_length;
+
+        this.updateStatus();
+    }
+
+    updateStatus() {
+        postMessage({
+            type: 'status',
+            payload: {
+                audioFile: this.audioFile,
+                dataSocket: this.dataSocket.readyState,
+                audioSocket: this.audioSocket.readyState,
+            },
+        });
+    }
+
+    sendMessage(msg) {
+        console.log('[web-audio-injector:worker] sending message', msg);
+        this.dataSocket.send(JSON.stringify(msg));
     }
 }
 
-let frames = 0;
-/**
- * Handle audio data from audioSocket.
- * @param {MessageEvent} event
- */
-function handleAudio(event) {
-    if (frames == 0) {
-        console.log('[web-audio-injector:worker] receiving audio...');
-    }
-
-    frames++;
-
-    if (frames == audioFile.frameCount) {
-        console.log('[web-audio-injector] finished receiving audio!');
-    }
-}
-
-function parseStatus(payload) {
-    audioFile.channels = payload.channels;
-    audioFile.sampleRate = payload.sample_rate;
-    audioFile.bitDepth = payload.bit_depth * 8;
-    audioFile.frameCount = payload.frame_count;
-    audioFile.bufferLength = payload.buffer_length;
-
-    updateStatus();
-}
-
-/**
- * Send status update to the UI thread.
- */
-function updateStatus() {
-    postMessage({
-        type: 'status',
-        payload: {
-            audioFile,
-            dataSocket: dataSocket.readyState,
-            audioSocket: audioSocket.readyState,
-        },
-    });
-}
-
-/**
- * Send message over te WebSocket.
- * @param {Object} msg
- */
-function sendMessage(msg) {
-    console.log('[web-audio-injector:worker] sending message', msg);
-    dataSocket.send(JSON.stringify(msg));
-}
+new InjectorWorker();
