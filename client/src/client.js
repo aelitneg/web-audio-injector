@@ -16,21 +16,39 @@ class InjectorClient {
                     bufferLength: 0,
                 },
             },
+            audioContext: {
+                playing: false,
+            }
         };
+
+        $(document).ready(() => {
+            $('#audio-context-suspended-alert').attr('hidden', true);
+
+            $('#audio-context-suspended-alert').click(async () => {
+                await this.audioContext.resume();
+                this.render();
+            });
+
+            $('#transport').click(() => {
+                this.state.audioContext.playing ? this.stop() : this.play();
+                this.state.audioContext.playing = !this.state.audioContext.playing;
+                this.render();
+            });
+        });
     }
 
     async initialize() {
         try {
-            this.worker = new Worker('./worker.js');
-            this.worker.onmessage = this.handleWorkerMessage.bind(this);
-
             this.audioContext = new AudioContext();
 
-            this.injectorNode = await this.audioContext.audioWorklet.addModule(
+            await this.audioContext.audioWorklet.addModule(
                 './processor.js',
             );
 
             this.worklet = new InjectorWorklet(this.audioContext);
+
+            this.worker = new Worker('./worker.js', { type: 'module' });
+            this.worker.onmessage = this.handleWorkerMessage.bind(this);
         } catch (error) {
             console.error('[web-audio-injector]', error);
         }
@@ -40,6 +58,9 @@ class InjectorClient {
         const { type, payload } = event.data;
 
         switch (type) {
+            case 'ready':
+                this.worklet.postMessage({ type: 'init', payload });
+                break;
             case 'status':
                 this.updateWorkerStatus(payload);
                 break;
@@ -49,6 +70,14 @@ class InjectorClient {
                 );
                 console.log('[web-audio-injector]', event.data);
         }
+    }
+
+    play() {
+        this.worklet.connect(this.audioContext.destination);
+    }
+
+    stop() {
+        this.worklet.disconnect(this.audioContext.destination);
     }
 
     updateWorkerStatus(payload) {
@@ -62,8 +91,13 @@ class InjectorClient {
     }
 
     render() {
-        const { worker } = this.state;
+        const { worker, audioContext } = this.state;
 
+        this.audioContext.state === 'suspended'
+            ? $('#audio-context-suspended-alert').attr('hidden', false)
+            : $('#audio-context-suspended-alert').attr('hidden', true);
+
+        $('#transport').text(audioContext.playing ? 'STOP' : 'PLAY');
         $('#data-socket').text(worker.dataSocket);
         $('#audio-socket').text(worker.audioSocket);
 
