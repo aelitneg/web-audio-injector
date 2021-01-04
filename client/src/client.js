@@ -1,11 +1,10 @@
 'use strict';
 
 import InjectorWorklet from './worklet.js';
-
 class InjectorClient {
     constructor() {
         this.state = {
-            worker: {
+            socketWorker: {
                 dataSocket: 'INIT',
                 audioSocket: 'INIT',
                 audioFile: {
@@ -49,8 +48,26 @@ class InjectorClient {
 
             this.worker = new Worker('./worker.js', { type: 'module' });
             this.worker.onmessage = this.handleWorkerMessage.bind(this);
+
+            this.socketWorker = new Worker('./socketWorker.js', { type: 'module' });
+            this.socketWorker.onmessage = this.handleSocketWorkerMessage.bind(this);
         } catch (error) {
             console.error('[web-audio-injector]', error);
+        }
+    }
+
+    handleSocketWorkerMessage(event) {
+        const { type, payload } = event.data;
+
+        switch (type) {
+            case 'status':
+                this.updateSocketWorkerStatus(payload);
+                break;
+            default:
+                console.warn(
+                    `[web-audio-injector] Unhandled socket worker message type: ${type}`,
+                );
+                console.log('[web-audio-injector]', event.data);
         }
     }
 
@@ -61,12 +78,9 @@ class InjectorClient {
             case 'ready':
                 this.worklet.postMessage({ type: 'init', payload });
                 break;
-            case 'status':
-                this.updateWorkerStatus(payload);
-                break;
             default:
                 console.warn(
-                    `[web-audio-injector] Unhandled message type: ${type}`,
+                    `[web-audio-injector] Unhandled injector worker message type: ${type}`,
                 );
                 console.log('[web-audio-injector]', event.data);
         }
@@ -80,32 +94,32 @@ class InjectorClient {
         this.worklet.disconnect(this.audioContext.destination);
     }
 
-    updateWorkerStatus(payload) {
-        const { worker } = this.state;
+    updateSocketWorkerStatus(payload) {
+        const { socketWorker } = this.state;
 
-        worker.audioFile = payload.audioFile;
-        worker.audioSocket = this._stateToStatus(payload.audioSocket);
-        worker.dataSocket = this._stateToStatus(payload.dataSocket);
+        socketWorker.audioFile = payload.audioFile;
+        socketWorker.audioSocket = this._stateToStatus(payload.audioSocket);
+        socketWorker.dataSocket = this._stateToStatus(payload.dataSocket);
 
         this.render();
     }
 
     render() {
-        const { worker, audioContext } = this.state;
+        const { socketWorker, audioContext } = this.state;
 
         this.audioContext.state === 'suspended'
             ? $('#audio-context-suspended-alert').attr('hidden', false)
             : $('#audio-context-suspended-alert').attr('hidden', true);
 
         $('#transport').text(audioContext.playing ? 'STOP' : 'PLAY');
-        $('#data-socket').text(worker.dataSocket);
-        $('#audio-socket').text(worker.audioSocket);
+        $('#data-socket').text(socketWorker.dataSocket);
+        $('#audio-socket').text(socketWorker.audioSocket);
 
-        $('#channels').text(worker.audioFile.channels);
-        $('#sample-rate').text(`${worker.audioFile.sampleRate / 1000} kHz`);
-        $('#bit-depth').text(worker.audioFile.bitDepth);
-        $('#frame-count').text(worker.audioFile.frameCount);
-        $('#buffer-length').text(worker.audioFile.bufferLength);
+        $('#channels').text(socketWorker.audioFile.channels);
+        $('#sample-rate').text(`${socketWorker.audioFile.sampleRate / 1000} kHz`);
+        $('#bit-depth').text(socketWorker.audioFile.bitDepth);
+        $('#frame-count').text(socketWorker.audioFile.frameCount);
+        $('#buffer-length').text(socketWorker.audioFile.bufferLength);
     }
 
     _stateToStatus(state) {
