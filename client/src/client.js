@@ -1,6 +1,8 @@
 'use strict';
 
 import InjectorWorklet from './worklet.js';
+import config from './config.js';
+
 class InjectorClient {
     constructor() {
         this.state = {
@@ -38,19 +40,26 @@ class InjectorClient {
 
     async initialize() {
         try {
+            // Initialize WebAudioAPI AudioContext
             this.audioContext = new AudioContext();
 
+            // Register AudioWorkletProcessor with AudioContext
             await this.audioContext.audioWorklet.addModule(
                 './processor.js',
             );
 
+            // Create AudioWorkletNode
             this.worklet = new InjectorWorklet(this.audioContext);
 
-            this.worker = new Worker('./worker.js', { type: 'module' });
+            // Create Audio Worker Thread
+            this.worker = new Worker('./worker.js');
             this.worker.onmessage = this.handleWorkerMessage.bind(this);
+            this.worker.postMessage({ type: 'init', payload: config });
 
-            this.socketWorker = new Worker('./socketWorker.js', { type: 'module' });
+            // Create Socket Worker Thread
+            this.socketWorker = new Worker('./socketWorker.js');
             this.socketWorker.onmessage = this.handleSocketWorkerMessage.bind(this);
+            this.socketWorker.postMessage({ type: 'init', payload: config });
         } catch (error) {
             console.error('[web-audio-injector]', error);
         }
@@ -75,9 +84,11 @@ class InjectorClient {
         const { type, payload } = event.data;
 
         switch (type) {
-            case 'ready':
-                this.worklet.postMessage({ type: 'init', payload });
+            case 'ready': {
+                const { sharedBuffers } = payload;
+                this.worklet.postMessage({ type: 'init', payload: { sharedBuffers, config } });
                 break;
+            }
             default:
                 console.warn(
                     `[web-audio-injector] Unhandled injector worker message type: ${type}`,

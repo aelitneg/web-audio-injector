@@ -1,6 +1,6 @@
 'use strict;';
 
-const CONFIG = Object.freeze({
+const Config = Object.freeze({
     BYTES_PER_STATE: Int32Array.BYTES_PER_ELEMENT,
     BYTES_PER_SAMPLE: Float32Array.BYTES_PER_ELEMENT,
     STATE_BUFFER_LENGTH: 4,
@@ -15,4 +15,4 @@ const CONFIG = Object.freeze({
     },
 });
 
-export default CONFIG;
+export default Config;

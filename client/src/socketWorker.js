@@ -22,8 +22,6 @@ class SocketWorker {
 
         this.frames = 0;
         this.xferStart;
-
-        postMessage({ type: 'ready' });
     }
 
     handleMessage(event) {
@@ -41,7 +39,7 @@ class SocketWorker {
     handleAudio() {
         if (this.frames == 0) {
             this.xferStart = performance.now();
-            console.log('[web-audio-injector:worker] receiving audio...');
+            console.log('[web-audio-injector:socket] receiving audio...');
         }
 
         this.frames++;
@@ -52,30 +50,30 @@ class SocketWorker {
         ) {
             const diff = performance.now() - this.xferStart;
             console.log(
-                `[web-audio-injector:worker] received ${this.frames} frames in ${diff} ms`,
+                `[web-audio-injector:socket] received ${this.frames} frames in ${diff} ms`,
             );
             this.frames = 0;
         }
     }
 
     dataSocketOpen() {
-        console.log('[web-audio-injector:worker] dataSocket opened');
+        console.log('[web-audio-injector:socket] dataSocket opened');
         this.sendMessage({ type: 'status' });
         this.updateStatus();
     }
 
     dataSocketClose() {
-        console.log('[web-audio-injector:worker] dataSocket closed');
+        console.log('[web-audio-injector:socket] dataSocket closed');
         this.updateStatus();
     }
 
     audioSocketOpen() {
-        console.log('[web-audio-injector:worker] audioSocket opened');
+        console.log('[web-audio-injector:socket] audioSocket opened');
         this.updateStatus();
     }
 
     audioSocketClose() {
-        console.log('[web-audio-injector:worker] audioSocket closed');
+        console.log('[web-audio-injector:socket] audioSocket closed');
         this.updateStatus();
     }
 
@@ -103,9 +101,9 @@ class SocketWorker {
     }
 
     sendMessage(msg) {
-        console.log('[web-audio-injector:worker] sending message', msg);
+        console.log('[web-audio-injector:socket] sending message', msg);
         this.dataSocket.send(JSON.stringify(msg));
     }
 }
 
-export default new SocketWorker();
+new SocketWorker();
