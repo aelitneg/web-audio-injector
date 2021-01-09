@@ -2,7 +2,11 @@
 
 Stream audio into Web Audio API context from Python
 
-⚠️ **WORK IN PROGRESS** ⚠️
+🛑 **FAILED PROTOTYPE** 🛑
+
+### Reasons for abandonment: 
+- Fixed length `SharedArrayBuffer` requires use of blocking `Atomic.wait()`. This prevents processing of `WebSocket` data on the worker thread. 
+- Lack of mobile browser support for `SharedArrayBuffer` 
 
 ## Overview
 
